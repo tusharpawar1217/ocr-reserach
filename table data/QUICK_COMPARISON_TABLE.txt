@@ -1,0 +1,80 @@
+================================================================================
+                    DATASET COMPARISON TABLE
+================================================================================
+
+Dataset          | Total    | Min Res      | Max Res           | Avg Res          
+                 | Images   | (W×H)        | (W×H)             | (W×H)            
+-----------------|----------|--------------|-------------------|------------------
+BSTD IRSDhi      | 25,000   | 8×18         | 1027×299          | 62×33            
+BSTD Detection   | 6,581    | 22×22        | 9644×12503        | 2954×2222        
+CVIT-HW Hindi    | 200,000  | 24×64        | 1100×407          | 317×204          
+
+================================================================================
+
+Width Statistics Table:
+--------------------------------------------------------------------------------
+Dataset          | Min  | Max   | Average | Std Dev
+-----------------|------|-------|---------|----------
+BSTD IRSDhi      | 8    | 1027  | 61.98   | 49.98
+BSTD Detection   | 21   | 12000 | 2953.95 | 1489.35
+CVIT-HW Hindi    | 24   | 1171  | 317.42  | 140.45
+
+================================================================================
+
+Height Statistics Table:
+--------------------------------------------------------------------------------
+Dataset          | Min  | Max   | Average | Std Dev
+-----------------|------|-------|---------|----------
+BSTD IRSDhi      | 18   | 388   | 32.92   | 17.69
+BSTD Detection   | 22   | 12503 | 2221.50 | 1174.55
+CVIT-HW Hindi    | 32   | 430   | 204.33  | 58.27
+
+================================================================================
+
+Resolution (Pixels) Statistics:
+--------------------------------------------------------------------------------
+Dataset          | Min      | Max           | Average      | Std Dev
+-----------------|----------|---------------|--------------|---------------
+BSTD IRSDhi      | 144      | 307,073       | 2,639        | 5,915
+BSTD Detection   | 484      | 120,578,932   | 8,001,605    | 7,456,528
+CVIT-HW Hindi    | 1,536    | 447,700       | 67,164       | 40,180
+
+================================================================================
+
+Text Content Statistics:
+--------------------------------------------------------------------------------
+Dataset          | Words/Img | Total Chars | Chars/Img | Chars/Word
+-----------------|-----------|-------------|-----------|------------
+BSTD IRSDhi      | 1.00      | 121,632     | 4.87      | 4.87
+BSTD Detection   | 19.46     | 672,545     | 102.19    | 5.25
+CVIT-HW Hindi    | 1.00      | 825,037     | 4.13      | 4.13
+
+================================================================================
+
+Key Observations:
+--------------------------------------------------------------------------------
+1. Image Size Scale:
+   - BSTD Detection has by far the largest images (avg ~8M pixels)
+   - CVIT-HW Hindi has medium-sized images (avg ~67K pixels)
+   - BSTD IRSDhi has the smallest images (avg ~2.6K pixels)
+
+2. Size Consistency:
+   - BSTD IRSDhi: Most consistent (lowest std dev relative to avg)
+   - CVIT-HW Hindi: Moderate consistency
+   - BSTD Detection: Highly variable (std dev > avg for pixels)
+
+3. Content Density:
+   - BSTD Detection: Multiple words/lines per image (19.46 words/img)
+   - BSTD IRSDhi & CVIT-HW: Single word per image (1.00 words/img)
+
+4. Aspect Ratios (Width:Height average):
+   - BSTD IRSDhi: ~1.9:1 (wider)
+   - CVIT-HW Hindi: ~1.6:1 (wider)
+   - BSTD Detection: ~1.3:1 (more square)
+
+5. Dataset Scale:
+   - CVIT-HW Hindi: Largest dataset (200K images)
+   - BSTD IRSDhi: Medium dataset (25K images)
+   - BSTD Detection: Smallest dataset (6.6K images)
+
+================================================================================

@@ -1,0 +1,20 @@
+[server]
+headless = true
+port = 8501
+enableCORS = false
+enableXsrfProtection = false
+
+[browser]
+gatherUsageStats = false
+showErrorDetails = true
+
+[theme]
+# Custom Color Scheme: Charcoal, Forest Green, Crimson Red
+primaryColor = "#A31C18"              # Crimson Red - buttons, links, accents
+backgroundColor = "#171717"            # Charcoal Black - main background
+secondaryBackgroundColor = "#06110C"   # Forest Green - sidebar, secondary panels
+textColor = "#FFFFFF"                  # White - text for dark theme
+font = "sans serif"
+
+[logger]
+level = "info"
