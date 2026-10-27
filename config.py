@@ -3,10 +3,29 @@ Configuration settings for CIV Board OCR Application
 """
 
 import pytesseract
+import sys
+import os
 
-# Tesseract OCR binary path (Windows)
-TESSERACT_PATH = r"C:\Users\pawar\AppData\Local\Programs\Tesseract-OCR\tesseract.exe"
-pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
+# Tesseract OCR binary path
+# Auto-detect based on platform
+if sys.platform == "win32":
+    # Windows
+    TESSERACT_PATH = r"C:\Users\pawar\AppData\Local\Programs\Tesseract-OCR\tesseract.exe"
+    if os.path.exists(TESSERACT_PATH):
+        pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
+elif sys.platform == "linux":
+    # Linux (Streamlit Cloud, Hugging Face)
+    # Tesseract installed via packages.txt, available in PATH
+    try:
+        import shutil
+        tesseract_path = shutil.which("tesseract")
+        if tesseract_path:
+            pytesseract.pytesseract.tesseract_cmd = tesseract_path
+    except:
+        pass  # Will use default PATH
+else:
+    # macOS or other
+    pass  # Will use default PATH
 
 # Database settings
 DATABASE_NAME = "civ_board_ocr.db"

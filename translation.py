@@ -295,13 +295,13 @@ def translate_with_offline_dictionary(text: str, target_language: str) -> Dict:
             "backend": "Offline Dictionary"
         }
 
-@st.cache_data(ttl=300)  # Cache for 5 minutes
+@st.cache_data(ttl=300, show_spinner=False)  # Cache for 5 minutes, no spinner
 def translate_text(text: str, target_language: str, source_language: str = "auto") -> Dict:
     """
     Multi-backend translation using ONLY 100% open-source solutions
     Translation backends (in priority order):
     1. Offline Dictionary (Fast, always works for common words)
-    2. Deep Translator (Open-source client for Google Translate API)
+    2. Deep Translator (Open-source client for Google Translate API) - DISABLED on Streamlit Cloud
     3. Argos Translate (Offline neural translation - 100% open source)
     4. MyMemory API (Free open-source translation API - skipped for unsupported languages)
     """
@@ -318,6 +318,10 @@ def translate_text(text: str, target_language: str, source_language: str = "auto
     target_code = get_language_code(target_language)
     source_code = get_language_code(source_language) if source_language != "auto" else "auto"
     backends_tried = []
+    
+    # Detect if running on Streamlit Cloud (rate limits are harsh there)
+    import os
+    is_cloud = os.getenv("STREAMLIT_SHARING_MODE") or os.getenv("STREAMLIT_CLOUD")
     
     # Backend 1 (FIRST): Try Offline Dictionary (Fast, no rate limits!)
     offline_result = translate_with_offline_dictionary(text, target_language)
@@ -337,8 +341,8 @@ def translate_text(text: str, target_language: str, source_language: str = "auto
             }
     backends_tried.append(offline_result["error"])
     
-    # Backend 2: Try Deep Translator with rate limiting
-    if DEEP_TRANSLATOR_AVAILABLE:
+    # Backend 2: Skip Deep Translator on cloud (rate limited), use on local only
+    if DEEP_TRANSLATOR_AVAILABLE and not is_cloud:
         try:
             # Add delay to avoid rate limiting (Google allows ~5 requests/second)
             time.sleep(0.3)  # 300ms delay
@@ -366,6 +370,8 @@ def translate_text(text: str, target_language: str, source_language: str = "auto
                 backends_tried.append("Deep-Translator: Rate limit exceeded. Try again in a few seconds.")
             else:
                 backends_tried.append(f"Deep-Translator: {error_msg}")
+    elif is_cloud:
+        backends_tried.append("Deep-Translator: Disabled on Streamlit Cloud due to rate limits")
     
     # Backend 3: Try Argos Translate (100% offline, neural translation)
     if ARGOS_AVAILABLE and source_code != "auto":
