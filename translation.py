@@ -126,10 +126,33 @@ def translate_with_argos(text: str, target_code: str, source_code: str = "en") -
 def translate_with_mymemory(text: str, target_code: str, source_code: str = "auto") -> Dict:
     """MyMemory Free Translation API (Open Source API)"""
     try:
+        # MyMemory requires specific locale codes (e.g., en-GB not just en)
+        # Map simple codes to locale codes
+        locale_map = {
+            "en": "en-GB",
+            "hi": "hi-IN",
+            "mr": "mr-IN",
+            "bn": "bn-IN",
+            "gu": "gu-IN",
+            "ta": "ta-IN",
+            "te": "te-IN",
+            "kn": "kn-IN",
+            "ml": "ml-IN",
+            "or": "or-IN",
+            "pa": "pa-IN",
+            "as": "as-IN",
+            "ne": "ne-NP",
+            "ur": "ur-PK",
+            "sa": "sa-IN",
+            "sd": "sd-PK"
+        }
+        
+        target_locale = locale_map.get(target_code, target_code)
+        source_locale = locale_map.get(source_code, source_code) if source_code != "auto" else "en-GB"
+        
         # Use Deep Translator's MyMemory wrapper
         if DEEP_TRANSLATOR_AVAILABLE:
-            translator = MyMemoryTranslator(source=source_code if source_code != "auto" else "en-US", 
-                                           target=target_code)
+            translator = MyMemoryTranslator(source=source_locale, target=target_locale)
             translated = translator.translate(text)
             
             if translated and translated.strip():
@@ -141,7 +164,7 @@ def translate_with_mymemory(text: str, target_code: str, source_code: str = "aut
         
         # Fallback to direct API call
         encoded_text = urllib.parse.quote(text[:500])  # Limit to 500 chars
-        url = f"https://api.mymemory.translated.net/get?q={encoded_text}&langpair={source_code}|{target_code}"
+        url = f"https://api.mymemory.translated.net/get?q={encoded_text}&langpair={source_locale}|{target_locale}"
         
         response = requests.get(url, timeout=10)
         if response.status_code == 200:
@@ -170,6 +193,13 @@ def translate_with_offline_dictionary(text: str, target_language: str) -> Dict:
     
     # Comprehensive dictionaries for Indian languages
     dictionaries = {
+        "en": {  # English (for testing/fallback)
+            # Common OCR words
+            "सरकार": "government", "गाँव": "village", "जिला": "district", "राज्य": "state",
+            "योजना": "scheme", "कार्य": "work", "रोजगार": "employment", "परियोजना": "project",
+            "नाम": "name", "तारीख": "date", "राशि": "amount", "कुल": "total",
+            "गाव": "village", "रक्कम": "amount", "दिनांक": "date", "एकूण": "total",
+        },
         "hi": {  # Hindi
             # Government/Official terms
             "government": "सरकार", "village": "गाँव", "district": "जिला", "state": "राज्य",
@@ -390,6 +420,20 @@ def translate_text(text: str, target_language: str, source_language: str = "auto
             "warning": "This is a partial translation. Some words may not be translated."
         }
     
+    # If translating TO English from Indian language, return original as fallback
+    if target_code == "en":
+        return {
+            "success": True,
+            "error": "Translation services unavailable",
+            "original_text": text,
+            "translated_text": text,  # Return original text
+            "source_language": source_language,
+            "target_language": target_language,
+            "backends_tried": backends_tried,
+            "note": "Translation to English unavailable. Showing original text.",
+            "warning": "Translation services are currently rate-limited. Original text shown."
+        }
+    
     return {
         "success": False,
         "error": f"All translation methods failed. Backends tried: {'; '.join(backends_tried)}",
@@ -398,7 +442,7 @@ def translate_text(text: str, target_language: str, source_language: str = "auto
         "source_language": source_language,
         "target_language": target_language,
         "backends_tried": backends_tried,
-        "suggestion": "Rate limit exceeded or network issues. Wait 30 seconds and try again, or use shorter text."
+        "suggestion": "Translation services rate-limited on Streamlit Cloud. Wait 60 seconds or use shorter text. Showing original text for now."
     }
 
 def get_translation_backends():
