@@ -27,6 +27,22 @@ except ImportError:
     DEEP_TRANSLATOR_AVAILABLE = False
 
 try:
+    from googletrans import Translator as GoogleTranslator2
+    GOOGLETRANS_AVAILABLE = True
+    TRANSLATION_AVAILABLE = True
+    BACKEND_INFO.append("GoogleTrans (Alternative Google Translate client)")
+except ImportError:
+    GOOGLETRANS_AVAILABLE = False
+
+try:
+    from translatepy import Translator as TranslatePyTranslator
+    TRANSLATEPY_AVAILABLE = True
+    TRANSLATION_AVAILABLE = True
+    BACKEND_INFO.append("TranslatePy (Multi-service aggregator)")
+except ImportError:
+    TRANSLATEPY_AVAILABLE = False
+
+try:
     import argostranslate.package
     import argostranslate.translate
     ARGOS_AVAILABLE = True
@@ -122,6 +138,70 @@ def translate_with_argos(text: str, target_code: str, source_code: str = "en") -
             "error": f"Argos Translate failed: {str(e)}",
             "backend": "Argos Translate"
         }
+
+def translate_with_googletrans(text: str, target_code: str, source_code: str = "auto") -> Dict:
+    """Google Translate using googletrans library (Alternative implementation)"""
+    try:
+        if not GOOGLETRANS_AVAILABLE:
+            raise ImportError("googletrans not available")
+        
+        translator = GoogleTranslator2()
+        
+        # googletrans uses 2-letter codes
+        result = translator.translate(text, src=source_code, dest=target_code)
+        
+        if result and result.text and result.text.strip():
+            return {
+                "success": True,
+                "translated_text": result.text,
+                "backend": "GoogleTrans (Alternative API)",
+                "confidence": "high"
+            }
+        else:
+            return {
+                "success": False,
+                "error": "GoogleTrans returned empty result",
+                "backend": "GoogleTrans"
+            }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": f"GoogleTrans failed: {str(e)}",
+            "backend": "GoogleTrans"
+        }
+
+
+def translate_with_translatepy(text: str, target_code: str, source_code: str = "auto") -> Dict:
+    """TranslatePy - Multi-service translation aggregator"""
+    try:
+        if not TRANSLATEPY_AVAILABLE:
+            raise ImportError("translatepy not available")
+        
+        translator = TranslatePyTranslator()
+        
+        # TranslatePy automatically tries multiple services
+        result = translator.translate(text, destination_language=target_code, source_language=source_code)
+        
+        if result and result.result and result.result.strip():
+            return {
+                "success": True,
+                "translated_text": result.result,
+                "backend": f"TranslatePy ({result.service})",
+                "note": f"Used {result.service} service"
+            }
+        else:
+            return {
+                "success": False,
+                "error": "TranslatePy returned empty result",
+                "backend": "TranslatePy"
+            }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": f"TranslatePy failed: {str(e)}",
+            "backend": "TranslatePy"
+        }
+
 
 def translate_with_mymemory(text: str, target_code: str, source_code: str = "auto") -> Dict:
     """MyMemory Free Translation API (Open Source API)"""
@@ -341,7 +421,48 @@ def translate_text(text: str, target_language: str, source_language: str = "auto
             }
     backends_tried.append(offline_result["error"])
     
-    # Backend 2: Skip Deep Translator on cloud (rate limited), use on local only
+    # Backend 2: Try GoogleTrans (Alternative Google Translate - more reliable)
+    if GOOGLETRANS_AVAILABLE:
+        try:
+            time.sleep(0.2)  # Small delay
+            result = translate_with_googletrans(text, target_code, source_code)
+            if result["success"]:
+                return {
+                    "success": True,
+                    "error": None,
+                    "original_text": text,
+                    "translated_text": result["translated_text"],
+                    "source_language": source_language,
+                    "target_language": target_language,
+                    "target_language_code": target_code,
+                    "backend": result["backend"],
+                    "note": "Using alternative Google Translate implementation"
+                }
+            backends_tried.append(result["error"])
+        except Exception as e:
+            backends_tried.append(f"GoogleTrans: {str(e)}")
+    
+    # Backend 3: Try TranslatePy (Multi-service aggregator)
+    if TRANSLATEPY_AVAILABLE:
+        try:
+            result = translate_with_translatepy(text, target_code, source_code)
+            if result["success"]:
+                return {
+                    "success": True,
+                    "error": None,
+                    "original_text": text,
+                    "translated_text": result["translated_text"],
+                    "source_language": source_language,
+                    "target_language": target_language,
+                    "target_language_code": target_code,
+                    "backend": result["backend"],
+                    "note": result.get("note", "Multi-service translation")
+                }
+            backends_tried.append(result["error"])
+        except Exception as e:
+            backends_tried.append(f"TranslatePy: {str(e)}")
+    
+    # Backend 4: Try Deep Translator (only on local, disabled on cloud)
     if DEEP_TRANSLATOR_AVAILABLE and not is_cloud:
         try:
             # Add delay to avoid rate limiting (Google allows ~5 requests/second)
@@ -373,7 +494,7 @@ def translate_text(text: str, target_language: str, source_language: str = "auto
     elif is_cloud:
         backends_tried.append("Deep-Translator: Disabled on Streamlit Cloud due to rate limits")
     
-    # Backend 3: Try Argos Translate (100% offline, neural translation)
+    # Backend 5: Try Argos Translate (100% offline, neural translation)
     if ARGOS_AVAILABLE and source_code != "auto":
         result = translate_with_argos(text, target_code, source_code)
         if result["success"]:
@@ -390,7 +511,7 @@ def translate_text(text: str, target_language: str, source_language: str = "auto
             }
         backends_tried.append(result["error"])
     
-    # Backend 4: Try MyMemory API (Skip Marathi as it's not supported)
+    # Backend 6: Try MyMemory API (Skip Marathi as it's not supported)
     if target_code != "mr":  # MyMemory doesn't support Marathi
         mymemory_result = translate_with_mymemory(text, target_code, source_code)
         if mymemory_result["success"]:

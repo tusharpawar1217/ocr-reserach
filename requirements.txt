@@ -29,8 +29,10 @@ numpy>=1.24.0
 pandas>=2.0.0
 sqlalchemy>=2.0.0
 
-# Translation
+# Translation - Multiple backends for reliability
 deep-translator>=1.11.0
+googletrans==4.0.0rc1
+translatepy>=2.3
 
 # Utilities
 python-dateutil>=2.8.0
