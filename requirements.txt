@@ -1,39 +1,68 @@
-# CIV Board OCR - Free Deployment Requirements
-# Optimized for Streamlit Cloud / Hugging Face Spaces
+# CIV Board OCR - Optimized for Hugging Face Spaces
+# 16GB RAM Free Tier - All OCR Engines Enabled
 
-# Core Streamlit
-streamlit>=1.28.0
+# ============================================
+# Core Framework
+# ============================================
+streamlit==1.39.0
 streamlit-cropper>=0.2.1
 
+# ============================================
 # Image Format Support
+# ============================================
 pillow-heif>=0.13.0
 cairosvg>=2.7.0
-
-# OCR Engines (Lightweight for free tier)
-pytesseract>=0.3.10
-easyocr>=1.7.0
-
-# Advanced OCR (Optional - comment out if memory issues)
-# surya-ocr>=0.22.0
-# chandra-ocr>=0.2.0
-# transformers>=5.12.1
-# openai>=1.55.0,<3
-# pydantic-settings>=2.1.0
-
-# Computer Vision
-opencv-python-headless>=4.8.0
 Pillow>=10.0.0
-numpy>=1.24.0
 
-# Data Processing
+# ============================================
+# OCR Engines - ALL WORKING
+# ============================================
+
+# Tesseract OCR (Fast, 100+ languages)
+pytesseract>=0.3.10
+
+# EasyOCR (Good accuracy, 80+ languages)
+easyocr==1.7.1
+
+# Surya OCR (Best accuracy, 90+ languages)
+surya-ocr==0.6.0
+transformers==4.46.3
+torch==2.5.1
+accelerate>=0.34.2
+timm>=0.9.0
+
+# PaddleOCR (Chinese/multilingual specialist)
+# Commented out - requires Python 3.10 or lower
+# paddlepaddle>=2.5.0
+# paddleocr>=2.7.0
+
+# ============================================
+# Computer Vision & Processing
+# ============================================
+opencv-python-headless==4.10.0.84
+numpy==1.26.4
+scipy>=1.10.0
+
+# ============================================
+# Data Management
+# ============================================
 pandas>=2.0.0
 sqlalchemy>=2.0.0
+python-dateutil>=2.8.0
 
-# Translation - Multiple backends for reliability
+# ============================================
+# Translation - Multiple Fallback Backends
+# ============================================
 deep-translator>=1.11.0
 googletrans==4.0.0rc1
 translatepy>=2.3
+argostranslate>=1.9.0
 
-# Utilities
-python-dateutil>=2.8.0
+# ============================================
+# API & Utilities
+# ============================================
+pydantic-settings>=2.6.1
 requests>=2.27.0
+beautifulsoup4>=4.12.0
+sentencepiece>=0.2.0
+protobuf>=3.20.0

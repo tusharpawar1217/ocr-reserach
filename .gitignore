@@ -265,8 +265,13 @@ ocr_env_312/
 paddle_env/
 *.db
 *.sqlite3
+*.db-journal
 uploads/
 test_uploads/
+
+# Analysis results folders
+simple_analysis_results/
+*_analysis_results/
 
 # Streamlit secrets
 .streamlit/secrets.toml
@@ -276,3 +281,31 @@ test_uploads/
 *.key
 *.pem
 .env.local
+
+# Deployment specific (keep only essential files)
+# Exclude old database files
+civ_ocr.db
+
+# Exclude documentation (keep only README.md)
+DEPLOYMENT*.md
+COLOR_SCHEME.md
+HF_DEPLOYMENT*.md
+HUGGING_FACE*.md
+AUTH_README.md
+CROP_COORDINATES*.md
+GOT_OCR*.md
+OCR_ENGINES*.md
+
+# Exclude setup/test scripts
+setup_*.py
+test_*.py
+migrate_*.py
+download_*.py
+get-pip.py
+
+# Exclude Jupyter notebooks
+*.ipynb
+
+# Exclude duplicate files
+streamlit_app.py
+app_backup.py

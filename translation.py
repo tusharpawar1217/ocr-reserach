@@ -204,7 +204,7 @@ def translate_with_translatepy(text: str, target_code: str, source_code: str = "
 
 
 def translate_with_mymemory(text: str, target_code: str, source_code: str = "auto") -> Dict:
-    """MyMemory Free Translation API (Open Source API)"""
+    """MyMemory Free Translation API (Open Source API) - Handles long text by chunking"""
     try:
         # MyMemory requires specific locale codes (e.g., en-GB not just en)
         # Map simple codes to locale codes
@@ -230,10 +230,53 @@ def translate_with_mymemory(text: str, target_code: str, source_code: str = "aut
         target_locale = locale_map.get(target_code, target_code)
         source_locale = locale_map.get(source_code, source_code) if source_code != "auto" else "en-GB"
         
-        # Use Deep Translator's MyMemory wrapper
+        # MyMemory limit is 500 characters - split long text
+        if len(text) > 400:
+            # Split text into sentences or chunks
+            sentences = text.replace('\n', '. ').split('. ')
+            translated_chunks = []
+            
+            current_chunk = ""
+            for sentence in sentences:
+                if len(current_chunk) + len(sentence) < 400:
+                    current_chunk += sentence + ". "
+                else:
+                    if current_chunk:
+                        # Translate current chunk
+                        try:
+                            if DEEP_TRANSLATOR_AVAILABLE:
+                                translator = MyMemoryTranslator(source=source_locale, target=target_locale)
+                                chunk_trans = translator.translate(current_chunk.strip())
+                                if chunk_trans:
+                                    translated_chunks.append(chunk_trans)
+                                    time.sleep(0.5)  # Avoid rate limit
+                        except:
+                            pass
+                    current_chunk = sentence + ". "
+            
+            # Translate last chunk
+            if current_chunk.strip():
+                try:
+                    if DEEP_TRANSLATOR_AVAILABLE:
+                        translator = MyMemoryTranslator(source=source_locale, target=target_locale)
+                        chunk_trans = translator.translate(current_chunk.strip())
+                        if chunk_trans:
+                            translated_chunks.append(chunk_trans)
+                except:
+                    pass
+            
+            if translated_chunks:
+                return {
+                    "success": True,
+                    "translated_text": " ".join(translated_chunks),
+                    "backend": "MyMemory API (Chunked)",
+                    "note": f"Long text split into {len(translated_chunks)} chunks"
+                }
+        
+        # For short text, use normal translation
         if DEEP_TRANSLATOR_AVAILABLE:
             translator = MyMemoryTranslator(source=source_locale, target=target_locale)
-            translated = translator.translate(text)
+            translated = translator.translate(text[:500])
             
             if translated and translated.strip():
                 return {
@@ -242,8 +285,8 @@ def translate_with_mymemory(text: str, target_code: str, source_code: str = "aut
                     "backend": "MyMemory API (Open Source)"
                 }
         
-        # Fallback to direct API call
-        encoded_text = urllib.parse.quote(text[:500])  # Limit to 500 chars
+        # Fallback to direct API call for short text
+        encoded_text = urllib.parse.quote(text[:400])  # Limit to 400 chars
         url = f"https://api.mymemory.translated.net/get?q={encoded_text}&langpair={source_locale}|{target_locale}"
         
         response = requests.get(url, timeout=10)
